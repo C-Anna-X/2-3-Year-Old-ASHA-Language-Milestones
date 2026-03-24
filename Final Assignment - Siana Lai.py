@@ -1,0 +1,144 @@
+import pylangacq
+from textblob import TextBlob
+import re
+
+'''
+This program takes a transcript file from the Wells corpus in the CHILDES database
+and searches through the utterances of the child at 3 years of age to see if they
+produce the following from the ASHA communication milestone checklist for 2-3 year olds:
+
+- Uses some plural words like birds or toys.
+- Uses –ing verbs like eating or running. Adds –ed to the end of words to 
+  talk about past actions, like looked or played.
+- Asks why and how
+- Says their name when asked.
+- Uses word combinations often but may occasionally repeat some words or phrases,
+  like baby – baby – baby sit down or I want – I want juice
+
+  Siana Lai
+  December 17, 2025
+  '''
+
+def read_file(file_path: str) -> list[list[str]]:
+    '''This function reads the .cha file and returns the child's utterances as a list of strings.'''
+    reader = pylangacq.read_chat(file_path)
+    utterances = reader.words(participants="CHI", by_utterances=True)
+    return utterances
+
+def plural(utterances):
+    '''This function prints the potential plural words uttered by the child as well as a count of potential plurals.'''
+    result_plural = []
+    pattern = r'[A-Za-z]+(?:s)'
+    for line in utterances: 
+        wiki = TextBlob(" ".join(line))
+        tags = wiki.tags
+        for word in tags:
+            if word[1] == 'NNS' or word[1] == 'NNPS':
+                result_plural.append(word[0])
+    number_plural = len(result_plural)
+    print(f'potential plural results are: {result_plural}')
+    print(f'The number of potential plural words is: {number_plural}')
+    return result_plural
+
+def ing_ed(utterances):
+    '''This function finds -ing verbs and -ed words produced by the child.
+    It returns the words ending in -ing and -ed as well as a count.'''
+    pattern = r'[A-Za-z]+(?:ing|ed)'
+    results_ing = []
+    results_ed = []
+    for line in utterances: 
+        wiki = TextBlob(" ".join(line))
+        tags = wiki.tags
+        for word in tags:
+            if word[1] == 'VBG':
+                results_ing.append(word[0])
+            if word[1] == 'VBD' or word[1] == 'VBN':
+                match = re.findall(pattern, word[0])
+                if match:
+                    results_ed.append(word[0])
+    ing_number = len(results_ing)
+    ed_number = len(results_ed)
+    print(f'words ending in -ing are: {results_ing}')
+    print(f'The child produced {ing_number} words ending in -ing.')
+    print(f'words ending in -ed are: {results_ed}')
+    print(f'The child produced {ed_number} words ending in -ed.')
+    return results_ing, results_ed
+
+def why_how(utterances):
+    '''This function counts the number of times the child said "why" or "how".'''
+    results_why = []
+    results_how = []
+    for line in utterances:
+        for word in line:
+            if word == "why":
+                results_why.append(word)
+            if word == "how":
+                results_how.append(word)
+    why_num = len(results_why)
+    how_num = len(results_how)
+    print(f'The child produced why {why_num} times.')
+    print(f'The child produced how {how_num} times.')
+    return why_num, how_num
+
+def name(utterances, name):
+    '''This function counts the number of times the child says their own name'''
+    results_name = []
+    for line in utterances:
+        for word in line:
+            if word.lower() == name:
+                results_name.append(word)
+    times_said = len(results_name)
+    print(f'Number of times own name was said: {times_said}')
+    return times_said
+
+
+def word_combo(utterances):
+    '''This function counts the number of utterances produced by the child that contained word combinations.'''
+    results = 0
+    for line in utterances:
+        if len(line)-1 > 1:
+            results += 1
+    print(f'The child used {results} word combinations')
+    return results
+
+def main(file: str, child_name: str) -> None:
+    utterances = read_file(file)
+    plural(utterances)
+    ing_ed(utterances)
+    why_how(utterances)
+    name(utterances, child_name)
+    word_combo(utterances)
+
+if __name__ == "__main__":
+    main('wells/Abigail/030002.cha', 'abigail')
+    main('wells/Benjamin/030229.cha', 'benjamin')
+    main('wells/Betty/030009.cha', 'betty')
+    main('wells/Darren/030003.cha', 'darren')
+    main('wells/Debbie/030304.cha', 'debbie')
+    main('wells/Ellen/030304.cha', 'ellen')
+    main('wells/Elspeth/030004.cha', 'elspeth')
+    main('wells/Frances/030300.cha', 'frances')
+    main('wells/Gary/030004.cha', 'gary')
+    main('wells/Gavin/030006.cha', 'gavin')
+    main('wells/Geoffrey/030012.cha', 'geoffrey')
+    main('wells/Gerald/030500.cha', 'gerald')
+    main('wells/Harriet/030000.cha', 'harriet')
+    main('wells/Iris/030006.cha', 'iris')
+    main('wells/Jack/030308.cha', 'jack')
+    main('wells/Jason/030002.cha', 'jason')
+    main('wells/Jonathan/030228.cha', 'jonathan')
+    main('wells/Laura/030007.cha', 'laura')
+    main('wells/Lee/030300.cha', 'lee')
+    main('wells/Martin/030004.cha', 'martin')
+    main('wells/Nancy/030006.cha', 'nancy')
+    main('wells/Neil/030002.cha', 'neil')
+    main('wells/Neville/030001.cha', 'neville')
+    main('wells/Olivia/030310.cha', 'olivia')
+    main('wells/Penny/030307.cha', 'penny')
+    main('wells/Rosie/030000.cha', 'rosie')
+    main('wells/Samantha/030004.cha', 'samantha')
+    main('wells/Sean/030011.cha', 'sean')
+    main('wells/Sheila/030304.cha', 'sheila')
+    main('wells/Simon/030001.cha', 'simon')
+    main('wells/Stella/030307.cha', 'stella')
+    main('wells/Tony/030321.cha', 'tony')
